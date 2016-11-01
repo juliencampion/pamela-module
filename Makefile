@@ -2,7 +2,7 @@ NAME=	pam_pamela.so
 
 CFLAGS=	-fPIC -Wall -Wextra
 
-SRC=
+SRC=	session.c
 
 OBJ=	$(SRC:.c=.o)
 

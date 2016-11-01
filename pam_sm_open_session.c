@@ -27,6 +27,7 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 				   const char **argv)
 {
   g_pamh = pamh;
+  (void)flags;
 
   if (parse_args(argc, argv) != 0)
     return PAM_SESSION_ERR;

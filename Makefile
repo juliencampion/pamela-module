@@ -2,7 +2,8 @@ NAME=	pam_pamela.so
 
 CFLAGS=	-std=c99 -fPIC -Wall -Wextra
 
-SRC=	session.c
+SRC=	common.c \
+	session.c
 
 OBJ=	$(SRC:.c=.o)
 

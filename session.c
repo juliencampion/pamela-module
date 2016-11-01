@@ -16,14 +16,10 @@
 #include <sys/wait.h>
 #include <syslog.h>
 #include <unistd.h>
+#include "common.h"
 
 #define WRITE_END 1
 #define READ_END  1
-
-static pam_handle_t *g_pamh;
-static bool g_debug;
-
-static int parse_args(int argc, const char **argv);
 
 PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 				   int flags,
@@ -187,20 +183,4 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh,
   free(command);
 
   return PAM_SUCCESS;
-}
-
-static int parse_args(int argc, const char **argv)
-{
-  g_debug = false;
-  for (int i = 0; i < argc; ++i)
-    {
-      if (strcmp(argv[i], "debug") == 0)
-	g_debug = true;
-      else
-	{
-	  pam_syslog(g_pamh, LOG_ERR, "unknown argument: '%s'", argv[i]);
-	  return -1;
-	}
-    }
-  return 0;
 }

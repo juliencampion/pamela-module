@@ -1,6 +1,6 @@
 NAME=	pam_pamela.so
 
-CFLAGS=	-fPIC -Wall -Wextra
+CFLAGS=	-std=c99 -fPIC -Wall -Wextra
 
 SRC=	session.c
 

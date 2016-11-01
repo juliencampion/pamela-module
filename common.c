@@ -27,7 +27,13 @@ bool is_dir(const char *path)
 {
   DIR *dir = opendir(path);
   if (dir == NULL)
+  {
+    if (g_debug)
+      pam_syslog(g_pamh, LOG_DEBUG, "Unable to open %s as a directory", path);
     return false;
+  }
   closedir(dir);
+  if (g_debug)
+    pam_syslog(g_pamh, LOG_DEBUG, "%s is a directory", path);
   return true;
 }

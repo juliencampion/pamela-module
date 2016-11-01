@@ -27,7 +27,6 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 				   const char **argv)
 {
   g_pamh = pamh;
-  (void)flags;
 
   if (parse_args(argc, argv) != 0)
     return PAM_SESSION_ERR;
@@ -63,6 +62,13 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
     {
       /* Build argument list */
       char *source = malloc(strlen("/home/.") + strlen(username) + 1);
+
+      if (!is_dir(source))
+      {
+	free(source);
+	return PAM_SUCCESS;
+      }
+
       char *target = strdup(pwd->pw_dir);
 
       if (source != NULL && target != NULL)
@@ -147,9 +153,7 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
       free(target);
     }
   else
-    pam_syslog(g_pamh, LOG_ERR, "Unable to get pwd");
-
-  //free(authtok);
+    pam_syslog(g_pamh, LOG_ERR, "Unable to get pwd: %s", strerror(errno));
 
   return PAM_SUCCESS;
 }
@@ -172,15 +176,20 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh,
     pam_syslog(g_pamh, LOG_DEBUG, "get username: '%s'", username);
 
 
-  char *command;
-  asprintf(&command, "fusermount -u /home/%s", username);
-  if (command != NULL)
+  struct passwd *pwd = getpwnam(username);
+
+  if (pwd != NULL)
+  {
+    char *command;
+    asprintf(&command, "fusermount -u %s", pwd->pw_dir);
+    if (command != NULL)
     {
       system(command);
+      free(command);
     }
-  else
-    pam_syslog(g_pamh, LOG_ERR, strerror(errno));
-  free(command);
+    else
+      pam_syslog(g_pamh, LOG_ERR, strerror(errno));
+  }
 
   return PAM_SUCCESS;
 }

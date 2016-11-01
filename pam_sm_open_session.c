@@ -39,13 +39,13 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
   /* Get the password */
   /*char *authtok = get_password();
 
-  if (authtok == NULL)
+    if (authtok == NULL)
     {
-      if (g_debug)
-	pam_syslog(g_pamh, LOG_DEBUG, "get no password :(");
-      return PAM_SESSION_ERR;
+    if (g_debug)
+    pam_syslog(g_pamh, LOG_DEBUG, "get no password :(");
+    return PAM_SESSION_ERR;
     }
-  if (g_debug)
+    if (g_debug)
     pam_syslog(g_pamh, LOG_DEBUG, "get password: '%s'", authtok);
   */
 
@@ -66,6 +66,13 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 
   /* Build argument list */
   char *source = malloc(strlen("/home/.") + strlen(username) + 1);
+
+  if (!is_dir(source))
+    {
+      free(source);
+      return PAM_SUCCESS;
+    }
+
   char *target = strdup(pwd->pw_dir);
 
   if (source != NULL && target != NULL)
@@ -148,8 +155,6 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 
   free(source);
   free(target);
-
-  //free(authtok);
 
   return PAM_SUCCESS;
 }

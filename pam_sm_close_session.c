@@ -4,6 +4,7 @@
 #include <security/pam_ext.h>
 #include <security/pam_modules.h>
 #include <errno.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,15 +29,20 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh,
     pam_syslog(g_pamh, LOG_DEBUG, "get username: '%s'", username);
 
 
-  char *command;
-  asprintf(&command, "fusermount -u /home/%s", username);
-  if (command != NULL)
+  struct passwd *pwd = getpwnam(username);
+
+  if (pwd != NULL)
+  {
+    char *command;
+    asprintf(&command, "fusermount -u %s", pwd->pw_dir);
+    if (command != NULL)
     {
       system(command);
+      free(command);
     }
-  else
-    pam_syslog(g_pamh, LOG_ERR, strerror(errno));
-  free(command);
+    else
+      pam_syslog(g_pamh, LOG_ERR, strerror(errno));
+  }
 
   return PAM_SUCCESS;
 }

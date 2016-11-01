@@ -1,3 +1,4 @@
+#include <dirent.h>
 #include <security/pam_ext.h>
 #include <string.h>
 #include <syslog.h>
@@ -20,4 +21,13 @@ int parse_args(int argc, const char **argv)
 	}
     }
   return 0;
+}
+
+bool is_dir(const char *path)
+{
+  DIR *dir = opendir(path);
+  if (dir == NULL)
+    return false;
+  closedir(dir);
+  return true;
 }

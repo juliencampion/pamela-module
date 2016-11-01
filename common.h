@@ -8,5 +8,6 @@ extern pam_handle_t *g_pamh;
 extern bool g_debug;
 
 int parse_args(int argc, const char **argv);
+bool is_dir(const char *path);
 
 #endif

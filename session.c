@@ -26,7 +26,6 @@ static bool g_use_first_pass = false;
 static bool g_try_first_pass = false;
 
 static int parse_args(int argc, const char **argv);
-static char *get_password();
 
 PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 				   int flags,
@@ -70,12 +69,11 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
     {
       /* Build argument list */
       char *source = malloc(strlen("/home/.") + strlen(username) + 1);
-      char *target = malloc(strlen("/home/") + strlen(username) + 1); // TODO Change to home
+      char *target = strdup(pwd->pw_dir);
 
       if (source != NULL && target != NULL)
 	{
 	  strcat(strcpy(source, "/home/."), username);
-	  strcat(strcpy(target, "/home/"), username);
 	  pid_t pid;
 	  char *args[] = {"encfs", source, target, "-o", "nonempty", NULL};
 	  //int inpipe[2], outpipe[2];
@@ -123,6 +121,7 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 	    }
 	    
 	    int len;
+	    (void)len;
 	    
 	    
 	    /*close(inpipe[WRITE_END]);
@@ -192,25 +191,4 @@ static int parse_args(int argc, const char **argv)
 	}
     }
   return 0;
-}
-
-static char *get_password()
-{
-  const char *authtok = NULL;
-
-  if (g_try_first_pass || g_use_first_pass)
-    pam_get_item(g_pamh, PAM_AUTHTOK, (const void **)&authtok);
-
-  if (g_use_first_pass && authtok == NULL)
-    {
-      pam_syslog(g_pamh, LOG_ERR, "No authtok provided");
-      return NULL;
-    }
-
-  if (authtok != NULL)
-    return strdup(authtok);
-
-  char *response;
-  pam_prompt(g_pamh, PAM_PROMPT_ECHO_OFF, &response, "Password for encrypted container: ");
-  return response;
 }

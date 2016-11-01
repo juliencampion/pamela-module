@@ -22,8 +22,6 @@
 
 static pam_handle_t *g_pamh;
 static bool g_debug;
-static bool g_use_first_pass;
-static bool g_try_first_pass;
 
 static int parse_args(int argc, const char **argv);
 
@@ -194,16 +192,10 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh,
 static int parse_args(int argc, const char **argv)
 {
   g_debug = false;
-  g_use_first_pass = false;
-  g_try_first_pass = false;
   for (int i = 0; i < argc; ++i)
     {
       if (strcmp(argv[i], "debug") == 0)
 	g_debug = true;
-      else if (strcmp(argv[i], "use_first_pass") == 0)
-	g_use_first_pass = true;
-      else if (strcmp(argv[i], "try_first_pass") == 0)
-	g_try_first_pass = true;
       else
 	{
 	  pam_syslog(g_pamh, LOG_ERR, "unknown argument: '%s'", argv[i]);

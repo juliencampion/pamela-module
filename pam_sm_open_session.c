@@ -89,7 +89,6 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
   }
 
 
-  strcat(strcpy(source, "/home/."), username);
   pid_t pid;
   char *args[] = {"encfs", source, target, "-o", "nonempty", NULL};
   //int inpipe[2], outpipe[2];

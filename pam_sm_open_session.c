@@ -53,10 +53,6 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
   const char *username = NULL;
   pam_get_item(g_pamh, PAM_USER, (const void **)&username);
 
-  if (g_debug)
-    pam_syslog(g_pamh, LOG_DEBUG, "get username: '%s'", username);
-
-
   struct passwd *pwd = getpwnam(username);
   if (pwd == NULL)
     {
@@ -107,7 +103,7 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
       pam_syslog(g_pamh, LOG_DEBUG, "Target is not mounted, prepare to mount it");
 
     pid_t pid;
-    char *args[] = {"encfs", source, target, "-o", "nonempty", NULL};
+    char *args[] = {"encfs", source, target, "-o", "nonempty,allow_root", NULL};
     //int inpipe[2], outpipe[2];
 
     /*	    if (pipe(inpipe) || pipe(outpipe))

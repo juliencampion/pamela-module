@@ -25,8 +25,6 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh,
   const char *username = NULL;
   pam_get_item(g_pamh, PAM_USER, (const void **)&username);
 
-  if (g_debug)
-    pam_syslog(g_pamh, LOG_DEBUG, "get username: '%s'", username);
 
 
   struct passwd *pwd = getpwnam(username);

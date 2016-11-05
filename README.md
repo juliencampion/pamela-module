@@ -15,3 +15,5 @@ Session service for encfs containers
 - Move `pam_pamela.so` to /lib/x86_64-linux-gnu/security
 - Add `session optional pam_pamela.so` to the pam configuration,
   for example at the end of `/etc/pam.d/common-session`
+- Add `auth optional pam_pamela.so` to the pam configuration,
+  for example at the end of `/etc/pam.d/common-auth`

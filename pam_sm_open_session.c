@@ -83,8 +83,8 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
   char *target = strdup(pwd->pw_dir);
   if (target == NULL)
   {
-    free(source);
     pam_syslog(g_pamh, LOG_ERR, strerror(errno));
+    free(source);
     return PAM_SESSION_ERR;
   }
 
@@ -92,15 +92,20 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
   char *mountpoint_command = malloc(strlen("mountpoint -q ") + strlen(target) + 1);
   if (mountpoint_command == NULL)
   {
+    pam_syslog(g_pamh, LOG_ERR, strerror(errno));
     free(source);
     free(target);
-    pam_syslog(g_pamh, LOG_ERR, strerror(errno));
     return PAM_SESSION_ERR;
   }
 
   strcat(strcpy(mountpoint_command, "mountpoint -q "), target);
+  if (g_debug)
+    pam_syslog(g_pamh, LOG_DEBUG, "system: '%s'", mountpoint_command);
   if (system(mountpoint_command) != 0)
   {
+    if (g_debug)
+      pam_syslog(g_pamh, LOG_DEBUG, "Target is not mounted, prepare to mount it");
+
     pid_t pid;
     char *args[] = {"encfs", source, target, "-o", "nonempty", NULL};
     //int inpipe[2], outpipe[2];
@@ -173,6 +178,8 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
       kill(pid, SIGKILL);
     }
   }
+  else if (g_debug)
+    pam_syslog(g_pamh, LOG_DEBUG, "Target is already mounted");
 
   free(source);
   free(target);

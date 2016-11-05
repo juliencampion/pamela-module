@@ -18,9 +18,6 @@
 #include <unistd.h>
 #include "common.h"
 
-#define WRITE_END 1
-#define READ_END  1
-
 PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 				   int flags,
 				   int argc,
@@ -35,19 +32,6 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
   if (g_debug)
     pam_syslog(g_pamh, LOG_DEBUG, "open_session");
 
-
-  /* Get the password */
-  /*char *authtok = get_password();
-
-    if (authtok == NULL)
-    {
-    if (g_debug)
-    pam_syslog(g_pamh, LOG_DEBUG, "get no password :(");
-    return PAM_SESSION_ERR;
-    }
-    if (g_debug)
-    pam_syslog(g_pamh, LOG_DEBUG, "get password: '%s'", authtok);
-  */
 
   /* Get the username */
   const char *username = NULL;
@@ -104,15 +88,8 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 
     pid_t pid;
     char *args[] = {"encfs", source, target, "-o", "nonempty,allow_root", NULL};
-    //int inpipe[2], outpipe[2];
 
-    /*	    if (pipe(inpipe) || pipe(outpipe))
-		  {
-		  pam_syslog(g_pamh, LOG_ERR, "Failed to create pipe");
-		  return PAM_IGNORE;
-		  }*/
-
-    // Execute
+    /* Execute encfs */
     switch (pid = fork())
     {
       case -1:
@@ -121,25 +98,14 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 
       case 0:
 
-	/* if (drop_permissions == 1) */
 	if ((initgroups(pwd->pw_name, pwd->pw_gid) == -1)
 	    || (setgid(pwd->pw_gid) == -1)
 	    || (setuid(pwd->pw_uid) == -1))
 	{
 	  pam_syslog(g_pamh, LOG_ERR, "Dropping permissions failed");
-	  return PAM_SESSION_ERR;
+	  return PAM_SERVICE_ERR;
 	}
 
-	/*close(outpipe[WRITE_END]);
-	  dup2(outpipe[READ_END], fileno(stdin));
-	  close(outpipe[READ_END]);
-
-	  close(inpipe[READ_END]);
-	  dup2(inpipe[WRITE_END], fileno(stdout));
-	  close(inpipe[WRITE_END]);*/
-
-	// For some reason the current directory has to be set to targetpath (or path?) before exec'ing encfs through gdm
-	//chdir(targetpath);
 	execvp("encfs", args);
 	char errstr[128];
 
@@ -148,26 +114,7 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 	exit(1);
     }
 
-    int len;
-    (void) len;
-
-
-    /*close(inpipe[WRITE_END]);
-      close(outpipe[READ_END]);*/
-
-
-
     int status;
-    /*if (waitpid(pid, &status, WNOHANG) == 0)
-      {
-      len = write(outpipe[WRITE_END], authtok, (size_t) strlen(authtok));
-      if ((len != (size_t) strlen(authtok))
-      || (write(outpipe[WRITE_END], "\n", 1) != 1))
-      pam_syslog(g_pamh, LOG_ERR, "Did not send password to pipe (%d sent)", len);
-      close(outpipe[WRITE_END]);
-      }*/
-
-
     if (waitpid(pid, &status, 0))
     {
       pam_syslog(g_pamh, LOG_ERR, "Timed out waiting for encfs, killing\n");

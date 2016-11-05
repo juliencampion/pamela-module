@@ -18,10 +18,8 @@
 #include <unistd.h>
 #include "common.h"
 
-#define WRITE_END 1
 #define READ_END  0
-
-static int waitpid_timeout(pid_t pid, int *status, int options);
+#define WRITE_END 1
 
 PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh,
 				   int flags,
@@ -78,7 +76,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh,
     return PAM_AUTH_ERR;
   }
 
-  // Check if the home is not already mounted
+  /* Check if the home is not already mounted */
   char *mountpoint_command = malloc(strlen("mountpoint -q ") + strlen(target) + 1);
   if (mountpoint_command == NULL)
   {
@@ -106,7 +104,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh,
 	return PAM_IGNORE;
       }
 
-    // Execute
+    /* Execute encfs */
     switch (pid = fork())
     {
       case -1:
@@ -115,7 +113,6 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh,
 
       case 0:
 
-	/* if (drop_permissions == 1) */
 	if ((initgroups(pwd->pw_name, pwd->pw_gid) == -1)
 	    || (setgid(pwd->pw_gid) == -1)
 	    || (setuid(pwd->pw_uid) == -1))
@@ -127,11 +124,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh,
 	close(outpipe[WRITE_END]);
 	dup2(outpipe[READ_END], fileno(stdin));
 	close(outpipe[READ_END]);
-	
-	//close(inpipe[READ_END]);
-	//dup2(inpipe[WRITE_END], fileno(stdout));
-	//close(inpipe[WRITE_END]);
- 
+
 	execvp("encfs", args);
 	char errstr[128];
 
@@ -140,10 +133,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh,
 	exit(1);
     }
 
-
-    //close(inpipe[WRITE_END]);
     close(outpipe[READ_END]);
-
 
     ssize_t len;
     int status;
@@ -156,7 +146,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh,
 	close(outpipe[WRITE_END]);
       }
 
-    if (waitpid_timeout(pid, &status, 0)) // TODO Remove waitpid_timeout ?
+    if (waitpid(pid, &status, 0))
     {
       pam_syslog(g_pamh, LOG_ERR, "Timed out waiting for encfs, killing\n");
       kill(pid, SIGKILL);
@@ -182,21 +172,4 @@ PAM_EXTERN int pam_sm_setcred(pam_handle_t * pamh,
   (void)argc;
   (void)argv;
   return PAM_IGNORE;
-}
-
-static int waitpid_timeout(pid_t pid, int *status, int options)
-{
-    pid_t retval;
-    int i = 0;
-
-    do
-    {
-        retval = waitpid(pid, status, options);
-        if (i++ > 10)
-        {
-            return 1;
-        }
-    }
-    while (retval == 0 || (retval == -1 && errno == EINTR));
-    return 0;
 }

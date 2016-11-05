@@ -127,7 +127,7 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,
 	    || (setuid(pwd->pw_uid) == -1))
 	{
 	  pam_syslog(g_pamh, LOG_ERR, "Dropping permissions failed");
-	  return PAM_SERVICE_ERR;
+	  return PAM_SESSION_ERR;
 	}
 
 	/*close(outpipe[WRITE_END]);
